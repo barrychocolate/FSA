@@ -1,5 +1,5 @@
 ---
-title: "FSA"
+title: "UK Food Hygiene Ratings"
 author: "Barry Bullas"
 date: "20/12/2019"
 output: html_document
@@ -7,24 +7,60 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+list_of_packages <- c("rvest", "dplyr", "httr", "xml2", "jsonlite", "DT")
+new_packages <- list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+
+#Load required packages
+lapply(list_of_packages, library, character.only = TRUE)
 ```
 
-## R Markdown
+## Aim of the Project
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The aim of this project is to be able to retrieve and analyse [Food Hygiene Ratings](http://api.ratings.food.gov.uk/help) for the UK.  
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+The data will be retrieved using the API which the FSA make available to developers. No sign-up process, API keys, or login details are required at this time to use the service
 
-```{r cars}
-summary(cars)
+### Recomended reading
+
+* [API Guidance V1](https://ratings.food.gov.uk/open-data-resources/documents/api-guidance.pdf)
+* [API Guidance V2](http://api.ratings.food.gov.uk/help)
+* [Terms and conditions of using the data and images](http://www.food.gov.uk/terms-and-conditions).
+
+## Get the authorities
+To test using the API with a smaller dataset we will get all of the local authorities.
+
+```{r }
+# Message to send to the api as a courtesy.  Helps those running the api contact you if needed
+user_text <- 'my@email.address this is a personal project to test retrieving data from the FSA api'
+
+# Static URL for returning all of the authorities
+authorities_url <- 'https://ratings.food.gov.uk/authorities/json'
+
+# Get the authorities by passing the GET commmand the URL and the user text
+get_authorities_response <- GET(authorities_url, user_agent(user_text))
+
+# Check http_type() of the response
+http_type(get_authorities_response)
+
+# Parse returned text with fromJSON()
+all_authorities_json <- fromJSON(content(get_authorities_response, as = "text",  encoding = "UTF-8"), simplifyDataFrame = TRUE)
+
+# The authrities are contained within the returned json
+all_authorities <- all_authorities_json[["ArrayOfWebLocalAuthorityAPI"]][["WebLocalAuthorityAPI"]]
+
+# Remove Authorities with an id below zero
+all_authorities <- all_authorities[all_authorities$LocalAuthorityId  > 0,]
+
+head(all_authorities, 10)
 ```
 
-## Including Plots
+## Get Hygiene Ratings
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+# URL for the API
+static_url <-
+  'http://ratings.food.gov.uk/'
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
