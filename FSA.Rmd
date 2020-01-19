@@ -53,7 +53,7 @@ all_authorities <- all_authorities_json[["ArrayOfWebLocalAuthorityAPI"]][["WebLo
 # Remove Authorities with an id below zero
 all_authorities <- all_authorities[all_authorities$LocalAuthorityId  > 0,]
 
-head(all_authorities, 10)
+datatable(head(all_authorities, 10))
 ```
 
 ## Get Hygiene Ratings
@@ -62,5 +62,7 @@ head(all_authorities, 10)
 # URL for the API
 static_url <-
   'http://ratings.food.gov.uk/'
+
+
 ```
 
